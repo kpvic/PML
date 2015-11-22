@@ -84,7 +84,7 @@ library(gbm)</code></pre>
 <ul>
 <li>The data was loaded into R separately as “traindata” and “testdata”.</li>
 <li>The training dataset was cleaned by removing predictors with more than 80% missing values and near-zero covariates.</li>
-<li>Correlations between each predictors and response variable classe were calculated using spearman’s rank-based correlation.<br /></li>
+<li>Correlations between each predictors and response variable “classe” were calculated using spearman’s rank-based correlation.<br /></li>
 <li>A correlation plot was generated to study the relationship between response and predictors.</li>
 </ul>
 <pre class="r"><code>traindata &lt;- read.csv(&quot;pml-training.csv&quot;, na.strings=c(&quot;NA&quot;,&quot;&quot;,&quot;#DIV/0!&quot;)) 
@@ -147,7 +147,8 @@ plot(mod.gbm)</code></pre>
 mod.rf
 plot(mod.rf)</code></pre>
 <pre class="r"><code>mod.rf$finalModel
-pred.rf &lt;- as.character(predict(mod.rf, test))</code></pre>
+pred.rf &lt;- as.character(predict(mod.rf, test))
+pred.rf</code></pre>
 </div>
 <div id="final-model" class="section level4">
 <h4>Final Model</h4>
@@ -159,7 +160,8 @@ pred.rf &lt;- as.character(predict(mod.rf, test))</code></pre>
   for(i in 1:n){
     filename = paste0(&quot;pred_prob/problem_id_&quot;, i, &quot;.txt&quot;)
     write.table(x[i], file = filename, quote = FALSE, row.names = FALSE, col.names = FALSE)
-  }</code></pre>
+  }
+pml_write_files(pred.rf)</code></pre>
 </div>
 
 

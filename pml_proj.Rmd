@@ -22,7 +22,7 @@ library(gbm)
 #### Data Pre-processing
 * The data was loaded into R separately as "traindata" and "testdata".
 * The training dataset was cleaned by removing predictors with more than 80% missing values and near-zero covariates. 
-* Correlations between each predictors and response variable classe were calculated using spearman's rank-based correlation.                
+* Correlations between each predictors and response variable "classe" were calculated using spearman's rank-based correlation.                
 * A correlation plot was generated to study the relationship between response and predictors. 
 
 ```{r data1, eval = F}
@@ -102,6 +102,7 @@ plot(mod.rf)
 ```{r pred1, message = F, eval = F}
 mod.rf$finalModel
 pred.rf <- as.character(predict(mod.rf, test))
+pred.rf
 ```
 
 #### Final Model
@@ -115,5 +116,6 @@ pml_write_files = function(x){
     filename = paste0("pred_prob/problem_id_", i, ".txt")
     write.table(x[i], file = filename, quote = FALSE, row.names = FALSE, col.names = FALSE)
   }
+pml_write_files(pred.rf)
 ```
 
