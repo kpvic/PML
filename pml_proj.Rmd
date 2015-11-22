@@ -1,0 +1,119 @@
+---
+title: "Practical Machine Learning Project"
+author: "KPV"
+date: "23 November 2015"
+output: html_document
+---
+
+
+* The training and testing datasets for machine learning project were downloaded from Prediction Assignment page. 
+* The following code was used to predict the "classe" response variable from other varaibles in the training dataset. 
+* The following Libraries were used for this project.
+
+```{r, message = F, warning = F}
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(RColorBrewer)
+library(rattle)
+library(gbm)
+```
+
+#### Data Pre-processing
+* The data was loaded into R separately as "traindata" and "testdata".
+* The training dataset was cleaned by removing predictors with more than 80% missing values and near-zero covariates. 
+* Correlations between each predictors and response variable classe were calculated using spearman's rank-based correlation.                
+* A correlation plot was generated to study the relationship between response and predictors. 
+
+```{r data1, eval = F}
+traindata <- read.csv("pml-training.csv", na.strings=c("NA","","#DIV/0!")) 
+traindata <- traindata[-1]
+testdata <- read.csv("pml-testing.csv", na.strings=c("NA","","#DIV/0!")) 
+testdata <- testdata[-1]
+
+intrain <- createDataPartition(traindata$classe, p=0.6, list=F)
+train <- traindata[intrain,] 
+test <- traindata[-intrain,]
+```
+
+```{r data2, eval = F}
+nsv <- nearZeroVar(train, saveMetrics = T)
+train <- train[,!nsv$nzv]
+
+nav <- sapply(colnames(train), function(x) 
+  if(sum(is.na(train[,x])) > 0.8 * nrow(train))
+    {return(T)} 
+  else {return(F)})
+
+train <- train[,!nav]
+
+cor <- abs(sapply(colnames(train[, -ncol(train)]), 
+                  function(x) cor(as.numeric(train[, x]), 
+                  as.numeric(train$classe), method = "spearman")))
+
+maxcor <- which.max(cor)
+plot(train[,names(maxcor)], 
+     train[,names(which.max(cor[-maxcor]))], 
+     col = train$classe,  pch = 19, cex = 0.5,
+     xlab = names(maxcor), ylab = names(which.max(cor[-maxcor])))
+```
+
+#### Predictive Modelling
+
+* The algorithms used for predictive modelling were - Decision Trees, Boosting and Random Forests.
+
+* The Decision Tree prediction gave Accuracy of 87.05% (12.9% error rate)
+
+```{r dtree1, eval = F}
+mod.tree1 <- rpart(classe ~ ., data=train, method="class")
+pred.tree1 <- predict(mod.tree1, test, type = "class")
+
+confusionMatrix(pred.tree1, test$classe)
+fancyRpartPlot(mod.tree1)
+```
+
+```{r dtree2, eval = F}
+mod.tree2 <- rpart(classe ~ ., data=test)
+pred.tree2 <- predict(mod.tree2, test, type = "class")
+
+confusionMatrix(pred.tree2, test$classe)
+```
+
+* The Boosting algorithm with 10-fold cross validation gave Accuracy of 98.9% (0.011% error rate).
+
+```{r gbm, eval = F}
+mod.gbm <- train(classe ~ ., method = "gbm", data = train, verbose = F, 
+                  trControl = trainControl(method = "cv", number = 10))
+
+mod.gbm
+plot(mod.gbm)
+```
+
+* The Random Forests algorithm with 10-fold cross validation gave Accuracy of 99.7% (0.003% error rate).
+
+```{r rf, eval = F}
+mod.rf <- train(classe ~ ., method = "rf", data = train, 
+                importance = T, trControl = trainControl(method = "cv", number = 10))
+
+mod.rf
+plot(mod.rf)
+```
+
+```{r pred1, message = F, eval = F}
+mod.rf$finalModel
+pred.rf <- as.character(predict(mod.rf, test))
+```
+
+#### Final Model
+
+* Comparing model accuracies of the three predictive algorithms, the Random forests model has overall better accuracy. So this was taken as final model for the prediction. 
+
+```{r pred2, eval = F}
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("pred_prob/problem_id_", i, ".txt")
+    write.table(x[i], file = filename, quote = FALSE, row.names = FALSE, col.names = FALSE)
+  }
+```
+
